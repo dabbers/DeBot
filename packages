@@ -1,0 +1,176 @@
+#!/usr/bin/php
+<?php
+
+set_exception_handler('handler');
+
+require_once dirname(__FILE__) . '/module-include/Github/Autoloader.php';
+Github_Autoloader::register();
+
+
+if (!isset($argv[1])) {
+	$argv[1] = '';
+}
+
+switch ($argv[1]) {
+	case 'remove-modules':
+		remove_modules();
+		break;
+	case 'list-modules':
+		list_modules();
+		break;
+	case 'install-modules':
+		install_modules();
+		break;
+	default:
+		showhelp();
+}
+
+function showhelp() {
+	echo "Usage: ./packages command [arguments]\r\n";
+	echo "	 : ./packages list-modules\r\n";
+	echo "	 : ./packages install-modules cool-module\r\n";
+	echo "	 : ./packages remove-modules cool-module\r\n";
+	echo "\r\n";
+	echo "Please see: http://www.example.com/help.txt for more information\r\n";
+	
+}
+
+function list_modules() {
+	global $argc;
+
+	// This function should use a DB, like apt-get cache
+	if ($argc != 2) {
+		echo "Usage: ./packages list-modules\r\n";
+		die();
+	}
+
+	$gh = new Github_Client();
+	$commits = $gh->getCommitApi()->getBranchCommits('ss23', 'DeBot', 'modules');
+	$tree = $gh->getObjectApi()->showTree('ss23', 'DeBot', $commits[0]['id']);
+
+	foreach ($tree as $object) {
+		switch ($object['name']) {
+			case 'NEWS':
+			case 'README':
+				break;
+			default:
+				if (is_installed(substr($object['name'], 0, strlen($object['name']) - 4))) {
+					echo substr($object['name'], 0, strlen($object['name']) - 4) . " [*]\r\n";
+				} else {
+					echo substr($object['name'], 0, strlen($object['name']) - 4) . " [ ]\r\n";
+				}
+		}
+	}	
+}
+
+function install_modules() {
+	global $argc, $argv;
+
+	if ($argc < 3) {
+		echo "Usage: ./packages install-modules module-1 [modules-2]\r\n";
+		die();
+	}
+
+	$gh = new Github_Client();
+	$commits = $gh->getCommitApi()->getBranchCommits('ss23', 'DeBot', 'modules');
+
+	$tree = $gh->getObjectApi()->showTree('ss23', 'DeBot', $commits[0]['id']);
+
+	$modules = array_unique(array_slice($argv, 2));
+ 
+	$downloads = array();
+
+	foreach ($modules as $module) {	
+		$mcount = count($downloads);
+		foreach ($tree as $object) {
+			if ($module . '.php' == $object['name']) {
+				$downloads[] = $object;
+			}
+		}
+		if ($mcount == count($downloads)) {
+			echo "Unable to locate module '{$module}'.\r\n";
+			die();
+		}
+	}
+
+	// This shouldn't be needed, but I'm all about the fail safes.
+	if (count($downloads) == 0) {
+		echo "0 modules installed\r\n";
+		die();
+	}
+
+	foreach ($downloads as $download) {
+		$blob = $gh->getObjectApi()->getRawData('ss23', 'DeBot', $download['sha']);
+		if ($blob === false) {
+			echo "Download for " . substr($download['name'], 0, strlen($download['name']) - 4) . " failed.\r\n";
+			die();
+		}
+		$blobs[$download['name']] = $blob;
+	}
+
+	$installed = 0;
+
+	foreach ($blobs as $name => $blob) {
+		if (file_put_contents(dirname(__FILE__) . '/Modules/' . $name, $blob) === false) {
+			echo "Install for " . substr($name, 0, strlen($name) - 4) . " failed.\r\n";
+			die();
+		} else {
+			echo "Install for " . substr($name, 0, strlen($name) - 4) . " succeeded.\r\n";
+			$installed++;
+		}
+	}
+	echo "Finished with " . $installed . " packages installed\r\n";
+}
+
+function remove_modules() {
+	global $argc, $argv;
+
+	if ($argc < 3) {
+		echo "Usage: ./packages remove-modules module-1 [modules-2]\r\n";
+		die();
+	}
+
+	$modules = array_unique(array_slice($argv, 2));
+
+	foreach ($modules as $module) {
+		// Check of the module exists
+		if (!file_exists(dirname(__FILE__) . "/Modules/" . $module . ".php")) {
+			echo "Unable to locate module '{$module}'.\r\n";
+			die();
+		}
+	}
+
+	$count = 0;
+
+	foreach ($modules as $module) {
+		if (!unlink(dirname(__FILE__) . "/Modules/" . $module . ".php")) {
+			echo "Removal of " . $module . " failed.\r\n";
+		} else {
+			echo "Removed " . $module . "\r\n";
+			$count++;
+		}
+	}
+	echo "Finished with " . $count . " packages removed\r\n";
+}
+
+/**
+ * Checks if a module is installed
+ *
+ * @param string $module Module name (without extension)
+ *
+ * @return bool Is the module installed?
+ */
+function is_installed($module) {
+	return file_exists(dirname(__FILE__) . "/Modules/" . $module . ".php");	
+}
+
+function read_line() {
+	$fp = fopen('php://stdin', 'r');
+	$input = fread($fp, 999);
+	return trim($input);
+}
+
+function handler($e) {
+	echo $e;
+	die("Error. Please try again later\r\n");
+}
