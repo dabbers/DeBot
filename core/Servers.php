@@ -4,6 +4,7 @@
  * DeBot Core - Servers
  * Created by dab ??? ?? 2009
  * Last Edited: Aug 15 2010
+ * Last Edited: Apr 20 2013
  *
  * This manages all of our known networks.  I think a future need is to store
  * newly added networks to a custom config. So you don't have to go and add
@@ -11,6 +12,7 @@
  * config. I'll make the propsition on the Codebase and see how others respond.
  *
  * @author David (dab) <dabitp@gmail.com>
+ * @author Weidi Zhang <weidiz999@yahoo.com>
  * @version v1.0
 */
 
@@ -78,6 +80,74 @@ class Servers extends Singleton implements ArrayAccess
 			$this -> m_aServerChannels[ $sServer ][ $sName ] -> onNames( $aNames );
 
 	}
+	
+	/**
+	 * Called on a kick 
+	 *
+	 * @param string $sServer The server to which this applies to.
+	 * @param string $sName The channel to where this is going.
+	 * @param string $sUser The argument of the kicked user.
+	 */
+	public function onKick($sServer, $sName, $sUser) {
+		$sName = strtolower($sName);
+		$sUser = trim($sUser);
+		$this->m_aServerChannels[$sServer][$sName]->removeNick($sUser);
+	}
+	
+	/**
+	 * Called on a part
+	 *
+	 * @param string $sServer The server to which this applies to.
+	 * @param string $sName The channel to where this is going.
+	 * @param string $sUser The argument of the parting user.
+	 */
+	public function onPart($sServer, $sName, $sUser) {
+		$sName = ltrim(strtolower($sName), ":");
+		$sUser = trim($sUser);
+		$this->m_aServerChannels[$sServer][$sName]->removeNick($sUser);
+	}
+	
+	/**
+	 * Called on a join
+	 *
+	 * @param string $sServer The server to which this applies to.
+	 * @param string $sName The channel to where this is going.
+	 * @param string $sUser The argument of the joining user.
+	 */
+	public function onJoin($sServer, $sName, $sUser) {
+		$sName = ltrim(strtolower($sName), ":");
+		$sUser = trim($sUser);
+		$this->m_aServerChannels[$sServer][$sName]->addNick($sUser);
+	}
+	
+	/**
+	 * Called on a quit
+	 *
+	 * @param string $sServer The server to which this applies to.
+	 * @param string $sUser The argument of the quitting user.
+	 */
+	public function onQuit($sServer, $sUser) {
+		$sUser = trim($sUser);
+		foreach ($this->m_aServerChannels[$sServer] as $sChan => $sData) {
+			$this->m_aServerChannels[$sServer][$sChan]->removeNick($sUser);
+		}
+	}
+	
+	/**
+	 * Called on a user nick change
+	 *
+	 * @param string $sServer The server to which this applies to.
+	 * @param string $sUser The argument of the user changing his/her nick.
+	 * @param string $sNew The new nick of the sUser.
+	 */
+	public function onNickChange($sServer, $sUser, $sNew) {
+		$sUser = trim($sUser);
+		$sNew = ltrim(trim($sNew), ":");
+		foreach ($this->m_aServerChannels[$sServer] as $sChan => $sData) {
+			$this->m_aServerChannels[$sServer][$sChan]->changeNick($sUser, $sNew);
+		}
+	}
+	 
 
 	/**
 	 * Called onmode changes/listing

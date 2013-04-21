@@ -3,6 +3,7 @@
  * DeBot Core - Config
  * Created by dab ??? ?? 2009
  * Last Edited: Aug 14 2010
+ * Last Edited: Apr 20 2013
  *
  * Handles the config, and allows for a global access through singleton (Static).
  *
@@ -15,7 +16,7 @@
  * DO NOT CHANGE THIS!
  * @var String The string of the bot
  */
-define( 'VERSION', '1.5' ); // Current Framework version
+define( 'VERSION', '1.5.1' ); // Current Framework version
 
 /**
  * Defines the string version of the bot. Please don't change this.

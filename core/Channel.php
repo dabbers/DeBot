@@ -101,6 +101,42 @@ class Channel implements ArrayAccess
 		 }
 
 	}
+	
+	/**
+	 * Remove a user from our list.
+	 *
+	 * @param string $sName Nick name to remove
+	 */
+	public function removeNick($sName) {
+		if (isset($this->m_aUsers[$sName])) {
+			unset($this->m_aUsers[$sName]);
+		}
+	}
+	
+	/**
+	 * Change user's nick in our list.
+	 *
+	 * @param string $sName Nick of user
+	 * @param string $sNew New nick of user
+	 */
+	public function changeNick($sName, $sNew) {
+		if (isset($this->m_aUsers[$sName])) {
+			$uModes = $this->m_aUsers[$sName];
+			unset($this->m_aUsers[$sName]);
+			$this->m_aUsers[$sNew] = $uModes;
+		}
+	}
+	
+	/**
+	 * Add a user to our list.
+	 *
+	 * @param string $sName Nick name to add
+	 */
+	public function addNick($sName) {
+		if (!isset($this->m_aUsers[$sName])) {
+			$this->m_aUsers[$sName] = "";
+		}
+	}
 
 	/**
 	 * The mode and the parameters used on a channel

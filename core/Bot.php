@@ -5,6 +5,7 @@
  * Created by dab ??? ?? 2009
  * Last Edited: Jul 29 2010
  * Last Edited: Aug 15 2010
+ * Last Edited: Apr 20 2013
  *
  * This file contains the structure for a SINGLE complete bot. It auto loads
  * everything from the config based on either the Default bot config or the
@@ -565,6 +566,7 @@ class Bot implements ArrayAccess
 					// Perform a callback on the modules to indicate a join has been made
 					// Aha, here is the neduka. Dang. Wait.... what params are sent onjoin? Oh right... Channel
 					$this->m_aModules->onJoin( );
+					Servers::obj()->onJoin($this->bufferIn->Network, $this->bufferIn->Channel, $this->bufferIn->From);
 					GlobalModules::obj()->onJoin( );
 				}
 				break;
@@ -646,17 +648,20 @@ class Bot implements ArrayAccess
 			// :dab_test!dabitp@dab-media.com QUIT :Quit: http://www.mibbit.com ajax IRC Client
 			case 'quit': // a user quit the irc
 				GlobalModules::obj()->onQuit( $this, $this->bufferIn->From, $this->bufferIn->src->_(2) );
+				Servers::obj()->onQuit($this->bufferIn->Network, $this->bufferIn->From);
 				$this->m_aModules->onQuit( );
 				break;
 
 			case 'part': // a user parts the channel
 				$this->bufferIn->Channel = $this->bufferIn->src[ 2 ];
 				GlobalModules::obj()->onPart( $this, $this->bufferIn->From, $this->bufferIn->src[ 2 ],$this->bufferIn->src->_(2) );
+				Servers::obj()->onPart($this->bufferIn->Network, $this->bufferIn->Channel, $this->bufferIn->From);
 				$this->m_aModules->onPart( );
 				break;
 
 			case 'nick': // A person changes their nick
 				GlobalModules::obj()->onNick( $this, $this->bufferIn->From, trim( $this->bufferIn->NedukaStr ) );
+				Servers::obj()->onNickChange($this->bufferIn->Network, $this->bufferIn->From, $this->bufferIn->NedukaStr);
 				$this->m_aModules->onNick( );
 				break;
 			case '311': // All of these are WHOIS results.
@@ -694,6 +699,7 @@ class Bot implements ArrayAccess
 			case 'kick':
 				$this->bufferIn->Channel = $this->bufferIn->src[ 2 ];
 				GlobalModules::obj()->onKick( $this, $this->bufferIn->From, $this->bufferIn->src[ 2 ], $this->bufferIn->src[ 3 ], $this->bufferIn->NedukaStr );
+				Servers::obj()->onKick($this->bufferIn->Network, $this->bufferIn->Channel, $this->bufferIn->src[3]);
 				$this->m_aModules->onKick( );
 				break;
 
