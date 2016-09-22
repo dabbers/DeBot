@@ -91,7 +91,10 @@ class Servers extends Singleton implements ArrayAccess
 	public function onKick($sServer, $sName, $sUser) {
 		$sName = strtolower($sName);
 		$sUser = trim($sUser);
-		$this->m_aServerChannels[$sServer][$sName]->removeNick($sUser);
+		
+		if (isset($this->m_aServerChannels[$sServer][$sName])) {
+			$this->m_aServerChannels[$sServer][$sName]->removeNick($sUser);
+		}
 	}
 	
 	/**
@@ -104,7 +107,10 @@ class Servers extends Singleton implements ArrayAccess
 	public function onPart($sServer, $sName, $sUser) {
 		$sName = ltrim(strtolower($sName), ":");
 		$sUser = trim($sUser);
-		$this->m_aServerChannels[$sServer][$sName]->removeNick($sUser);
+		
+		if (isset($this->m_aServerChannels[$sServer][$sName])) {
+			$this->m_aServerChannels[$sServer][$sName]->removeNick($sUser);
+		}
 	}
 	
 	/**
@@ -117,7 +123,10 @@ class Servers extends Singleton implements ArrayAccess
 	public function onJoin($sServer, $sName, $sUser) {
 		$sName = ltrim(strtolower($sName), ":");
 		$sUser = trim($sUser);
-		$this->m_aServerChannels[$sServer][$sName]->addNick($sUser);
+		
+		if (isset($this->m_aServerChannels[$sServer][$sName])) {
+			$this->m_aServerChannels[$sServer][$sName]->addNick($sUser);
+		}
 	}
 	
 	/**
@@ -129,7 +138,9 @@ class Servers extends Singleton implements ArrayAccess
 	public function onQuit($sServer, $sUser) {
 		$sUser = trim($sUser);
 		foreach ($this->m_aServerChannels[$sServer] as $sChan => $sData) {
-			$this->m_aServerChannels[$sServer][$sChan]->removeNick($sUser);
+			if (isset($this->m_aServerChannels[$sServer][$sChan])) {
+				$this->m_aServerChannels[$sServer][$sChan]->removeNick($sUser);
+			}
 		}
 	}
 	
@@ -144,7 +155,9 @@ class Servers extends Singleton implements ArrayAccess
 		$sUser = trim($sUser);
 		$sNew = ltrim(trim($sNew), ":");
 		foreach ($this->m_aServerChannels[$sServer] as $sChan => $sData) {
-			$this->m_aServerChannels[$sServer][$sChan]->changeNick($sUser, $sNew);
+			if (isset($this->m_aServerChannels[$sServer][$sChan])) {
+				$this->m_aServerChannels[$sServer][$sChan]->changeNick($sUser, $sNew);
+			}
 		}
 	}
 	 
