@@ -16,7 +16,7 @@
  * DO NOT CHANGE THIS!
  * @var String The string of the bot
  */
-define( 'VERSION', '1.5.1' ); // Current Framework version
+define( 'VERSION', '1.5.2' ); // Current Framework version
 
 /**
  * Defines the string version of the bot. Please don't change this.
